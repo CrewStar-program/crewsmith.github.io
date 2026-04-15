@@ -1,32 +1,196 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Guessing Game</title>
-</head>
+<meta charset="UTF-8">
+<title>Snake Game</title>
+<style>
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: #111;
+        margin: 0;
+        font-family: Arial;
+        color: white;
+    }
 
+    #container {
+        position: relative;
+    }
+
+    canvas {
+        background: #222;
+        border: 3px solid white;
+    }
+
+    /* Overlay screens */
+    .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    button {
+        padding: 10px 20px;
+        font-size: 18px;
+        margin-top: 10px;
+        cursor: pointer;
+    }
+
+    h1 {
+        margin-bottom: 10px;
+    }
+</style>
+</head>
 <body>
 
-<h1>Number Guessing Game</h1>
+<div id="container">
+    <canvas id="game" width="400" height="400"></canvas>
 
-<p>Guess a number between 1 and 10</p>
+    <!-- Start Screen -->
+    <div id="startScreen" class="overlay">
+        <h1>Snake Game</h1>
+        <button onclick="startGame()">Start Game</button>
+    </div>
 
-<input id="guess" type="number">
-<button onclick="checkGuess()">Submit</button>
-
-<p id="result"></p>
+    <!-- Game Over Screen -->
+    <div id="gameOverScreen" class="overlay" style="display:none;">
+        <h1>You Died</h1>
+        <button onclick="startGame()">Restart</button>
+    </div>
+</div>
 
 <script>
-let number = Math.floor(Math.random() * 10) + 1;
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-function checkGuess() {
-  let guess = document.getElementById("guess").value;
+const grid = 20;
+let count = 0;
 
-  if (guess == number) {
-    document.getElementById("result").innerText = "Correct! 🎉";
-  } else {
-    document.getElementById("result").innerText = "Try again!";
-  }
+// 🐢 EVEN SLOWER (higher = slower)
+const speed = 12;
+
+let running = false;
+
+let snake;
+let apple;
+
+function initGame() {
+    snake = {
+        x: 160,
+        y: 160,
+        dx: grid,
+        dy: 0,
+        cells: [],
+        maxCells: 4
+    };
+
+    apple = {
+        x: getRandomInt(0, 20) * grid,
+        y: getRandomInt(0, 20) * grid
+    };
 }
+
+function startGame() {
+    document.getElementById("startScreen").style.display = "none";
+    document.getElementById("gameOverScreen").style.display = "none";
+    initGame();
+    running = true;
+}
+
+function gameOver() {
+    running = false;
+    document.getElementById("gameOverScreen").style.display = "flex";
+}
+
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min)) + min;
+}
+
+function loop() {
+    requestAnimationFrame(loop);
+
+    if (!running) return;
+
+    if (++count < speed) return;
+    count = 0;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    snake.x += snake.dx;
+    snake.y += snake.dy;
+
+    // 🚫 Wall collision = death
+    if (
+        snake.x < 0 ||
+        snake.x >= canvas.width ||
+        snake.y < 0 ||
+        snake.y >= canvas.height
+    ) {
+        gameOver();
+        return;
+    }
+
+    snake.cells.unshift({x: snake.x, y: snake.y});
+
+    if (snake.cells.length > snake.maxCells) {
+        snake.cells.pop();
+    }
+
+    // draw apple
+    ctx.fillStyle = "red";
+    ctx.fillRect(apple.x, apple.y, grid - 1, grid - 1);
+
+    // draw snake
+    ctx.fillStyle = "lime";
+    snake.cells.forEach(function(cell, index) {
+        ctx.fillRect(cell.x, cell.y, grid - 1, grid - 1);
+
+        // eat apple
+        if (cell.x === apple.x && cell.y === apple.y) {
+            snake.maxCells++;
+            apple.x = getRandomInt(0, 20) * grid;
+            apple.y = getRandomInt(0, 20) * grid;
+        }
+
+        // self collision
+        for (let i = index + 1; i < snake.cells.length; i++) {
+            if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {
+                gameOver();
+            }
+        }
+    });
+}
+
+// controls
+document.addEventListener("keydown", function(e) {
+    if (!running) return;
+
+    if (e.key === "ArrowLeft" && snake.dx === 0) {
+        snake.dx = -grid;
+        snake.dy = 0;
+    } else if (e.key === "ArrowUp" && snake.dy === 0) {
+        snake.dy = -grid;
+        snake.dx = 0;
+    } else if (e.key === "ArrowRight" && snake.dx === 0) {
+        snake.dx = grid;
+        snake.dy = 0;
+    } else if (e.key === "ArrowDown" && snake.dy === 0) {
+        snake.dy = grid;
+        snake.dx = 0;
+    }
+});
+
+initGame();
+requestAnimationFrame(loop);
 </script>
 
 </body>
