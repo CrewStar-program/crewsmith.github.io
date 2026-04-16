@@ -15,6 +15,20 @@
         color: white;
     }
 
+    /* 🔙 Home Button */
+    #homeBtn {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        padding: 8px 14px;
+        font-size: 14px;
+        background: white;
+        color: black;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+
     #container {
         position: relative;
     }
@@ -24,7 +38,6 @@
         border: 3px solid white;
     }
 
-    /* Overlay screens */
     .overlay {
         position: absolute;
         top: 0;
@@ -52,16 +65,17 @@
 </head>
 <body>
 
+<!-- 🔙 Home Button -->
+<button id="homeBtn" onclick="goHome()">← Home</button>
+
 <div id="container">
     <canvas id="game" width="400" height="400"></canvas>
 
-    <!-- Start Screen -->
     <div id="startScreen" class="overlay">
         <h1>Snake Game</h1>
         <button onclick="startGame()">Start Game</button>
     </div>
 
-    <!-- Game Over Screen -->
     <div id="gameOverScreen" class="overlay" style="display:none;">
         <h1>You Died</h1>
         <button onclick="startGame()">Restart</button>
@@ -74,12 +88,9 @@ const ctx = canvas.getContext("2d");
 
 const grid = 20;
 let count = 0;
-
-// 🐢 EVEN SLOWER (higher = slower)
 const speed = 12;
 
 let running = false;
-
 let snake;
 let apple;
 
@@ -111,6 +122,11 @@ function gameOver() {
     document.getElementById("gameOverScreen").style.display = "flex";
 }
 
+/* 🔙 Go back to main page */
+function goHome() {
+    window.location.href = "index.html"; // change if your main page has a different name
+}
+
 function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min)) + min;
 }
@@ -128,7 +144,6 @@ function loop() {
     snake.x += snake.dx;
     snake.y += snake.dy;
 
-    // 🚫 Wall collision = death
     if (
         snake.x < 0 ||
         snake.x >= canvas.width ||
@@ -145,23 +160,19 @@ function loop() {
         snake.cells.pop();
     }
 
-    // draw apple
     ctx.fillStyle = "red";
     ctx.fillRect(apple.x, apple.y, grid - 1, grid - 1);
 
-    // draw snake
     ctx.fillStyle = "lime";
     snake.cells.forEach(function(cell, index) {
         ctx.fillRect(cell.x, cell.y, grid - 1, grid - 1);
 
-        // eat apple
         if (cell.x === apple.x && cell.y === apple.y) {
             snake.maxCells++;
             apple.x = getRandomInt(0, 20) * grid;
             apple.y = getRandomInt(0, 20) * grid;
         }
 
-        // self collision
         for (let i = index + 1; i < snake.cells.length; i++) {
             if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {
                 gameOver();
@@ -170,7 +181,6 @@ function loop() {
     });
 }
 
-// controls
 document.addEventListener("keydown", function(e) {
     if (!running) return;
 
